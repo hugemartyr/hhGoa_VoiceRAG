@@ -3,168 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice RAG</title>
+    <meta name="theme-color" content="#006b3d">
+    <title>Voice Goa · Hacker House</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; color: #333; }
-        h1 { text-align: center; color: #2c3e50; }
-        .controls { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; }
-        button { padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 8px; transition: 0.2s; }
-        #recordBtn { background-color: #e74c3c; color: white; }
-        #recordBtn.recording { background-color: #c0392b; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        
-        .card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .label { font-size: 12px; text-transform: uppercase; color: #6c757d; font-weight: bold; margin-bottom: 5px; }
-        .content { font-size: 18px; margin-bottom: 0; }
-        
-        .metrics { display: flex; flex-wrap: wrap; gap: 15px; font-size: 14px; background: #e9ecef; padding: 15px; border-radius: 8px; font-family: monospace; }
-        .metric-item { background: white; padding: 5px 10px; border-radius: 4px; border: 1px solid #ced4da; }
-        
-        #loading { text-align: center; display: none; font-style: italic; color: #666; margin: 20px 0; }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,500;9..40,600;9..40,700&family=Playfair+Display:ital,wght@0,700;0,800;1,800&display=swap');
+        :root { --green-950:#003d26; --green-900:#005c35; --green-800:#007043; --lime:#a8d957; --sun:#ffdc19; --pink:#ff1676; --cream:#fffef5; --ink:#063d29; --line:rgba(255,255,255,.24); }
+        * { box-sizing:border-box; } html { min-height:100%; background:var(--green-950); }
+        body { min-height:100vh; margin:0; overflow-x:hidden; color:var(--cream); font-family:"DM Sans",Arial,sans-serif; background:radial-gradient(circle at 50% 89%,rgba(255,220,25,.18),transparent 22rem),radial-gradient(circle at 12% 8%,rgba(91,198,104,.16),transparent 25rem),linear-gradient(150deg,#006a3c 0%,#005c35 51%,#003e29 100%); }
+        .page { position:relative; isolation:isolate; min-height:100vh; padding:22px clamp(20px,5vw,76px) 0; }
+        .grain { position:fixed; z-index:-1; inset:0; pointer-events:none; opacity:.2; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E"); }
+        .topbar { display:flex; align-items:center; justify-content:space-between; max-width:1180px; margin:auto; font:500 10px/1 "DM Mono",monospace; letter-spacing:.18em; text-transform:uppercase; color:var(--sun); }
+        .live { display:inline-flex; align-items:center; gap:8px; }.live::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--pink); box-shadow:0 0 0 4px rgba(255,22,118,.18); }
+        .hero { position:relative; max-width:1180px; min-height:340px; margin:0 auto; padding:clamp(34px,5vw,58px) 0 34px; text-align:center; }
+        .eyebrow { margin:0 0 12px; color:var(--pink); font:500 10px/1 "DM Mono",monospace; letter-spacing:.26em; text-transform:uppercase; }
+        .hero h1 { max-width:840px; margin:0 auto; font:800 clamp(54px,9vw,118px)/.74 "Playfair Display",Georgia,serif; letter-spacing:-.08em; color:var(--sun); text-transform:uppercase; }
+        .hero h1 span { display:inline-block; color:var(--cream); font-style:italic; transform:rotate(-6deg) translateY(-.05em); }.hero h1 .goa { position:relative; margin-left:.04em; color:var(--pink); font:700 clamp(30px,5vw,67px)/.8 "DM Sans",sans-serif; letter-spacing:-.07em; text-transform:none; transform:rotate(-8deg) translateY(-.28em); text-shadow:3px 3px 0 var(--sun); }
+        .sunset { position:absolute; z-index:-1; left:50%; bottom:-6px; width:min(94vw,720px); height:168px; overflow:hidden; transform:translateX(-50%); opacity:.96; }.sun { position:absolute; left:50%; bottom:17px; width:112px; height:112px; border-radius:50%; transform:translateX(-50%); background:var(--sun); box-shadow:0 0 55px rgba(255,220,25,.25); }.sun::before { content:""; position:absolute; top:-20px; left:50%; width:2px; height:14px; background:var(--sun); box-shadow:42px 18px 0 var(--sun),58px 50px 0 var(--sun),-42px 18px 0 var(--sun),-58px 50px 0 var(--sun); }.horizon { position:absolute; right:-8%; bottom:0; left:-8%; height:20px; border-top:2px solid rgba(255,254,245,.8); background:linear-gradient(90deg,transparent,rgba(168,217,87,.38),transparent); }.wave { position:absolute; bottom:-22px; left:0; width:100%; height:42px; border-top:4px solid var(--cream); border-radius:50%; opacity:.9; }.wave.w2 { bottom:-36px; width:78%; left:11%; border-color:var(--sun); opacity:.75; }
+        .studio { position:relative; max-width:960px; margin:-12px auto 0; padding:22px clamp(20px,4vw,36px) 26px; border:1px solid var(--line); border-radius:28px 28px 0 0; background:rgba(0,65,39,.78); box-shadow:0 -20px 70px rgba(0,42,26,.2); backdrop-filter:blur(12px); }.studio::before { content:""; position:absolute; top:-1px; left:12%; width:76%; height:3px; border-radius:8px; background:linear-gradient(90deg,transparent,var(--sun),var(--pink),transparent); }.section-kicker { margin:0; text-align:center; color:var(--lime); font:500 10px/1 "DM Mono",monospace; letter-spacing:.22em; text-transform:uppercase; }.studio h2 { margin:8px auto 20px; text-align:center; font-size:clamp(25px,4vw,42px); line-height:1.04; letter-spacing:-.05em; }.studio h2 em { color:var(--sun); font-style:normal; }
+        .record-shell { display:grid; place-items:center; } #recordBtn { position:relative; display:grid; place-items:center; width:142px; height:142px; padding:20px; cursor:pointer; color:var(--green-950); font:700 14px/1.15 "DM Sans",sans-serif; text-align:center; border:0; border-radius:50%; background:var(--sun); box-shadow:0 0 0 10px rgba(255,220,25,.1),0 10px 0 #d4af00; transition:transform .2s,background .2s,box-shadow .2s; touch-action:none; } #recordBtn:hover { transform:translateY(-4px) rotate(-2deg); box-shadow:0 0 0 14px rgba(255,220,25,.13),0 14px 0 #d4af00; } #recordBtn:focus-visible { outline:3px solid var(--cream); outline-offset:7px; } #recordBtn::before { content:"●"; display:block; margin-bottom:8px; color:var(--pink); font-size:28px; line-height:.4; } #recordBtn.recording { color:var(--cream); background:var(--pink); box-shadow:0 0 0 10px rgba(255,22,118,.13),0 10px 0 #bb0751; animation:pulse 1.25s ease-in-out infinite; } #recordBtn.recording::before { color:var(--sun); } @keyframes pulse { 50% { transform:scale(1.06); box-shadow:0 0 0 24px rgba(255,22,118,0),0 10px 0 #bb0751; } }.record-hint { margin:18px 0 0; color:rgba(255,255,245,.63); font:11px/1.4 "DM Mono",monospace; letter-spacing:.05em; text-align:center; }
+        #loading { display:none; margin:30px auto 0; color:var(--sun); font:500 12px/1.4 "DM Mono",monospace; text-align:center; letter-spacing:.06em; } #loading::before { content:""; display:inline-block; width:9px; height:9px; margin-right:9px; border:2px solid var(--sun); border-top-color:transparent; border-radius:50%; animation:spin .75s linear infinite; vertical-align:-1px; } @keyframes spin { to { transform:rotate(360deg); } }
+        #results { display:none; max-width:960px; margin:0 auto; padding-bottom:40px; }.results-grid { display:grid; grid-template-columns:minmax(0,.68fr) minmax(250px,1.32fr); gap:16px; }.card { padding:24px; border:1px solid var(--line); border-radius:16px; background:rgba(255,254,245,.96); color:var(--ink); box-shadow:0 12px 30px rgba(0,34,21,.17); }.card.answer-card { border-left:6px solid var(--sun); }.card.rejected { border-left-color:var(--pink); }.label { margin-bottom:10px; color:var(--green-800); font:500 10px/1 "DM Mono",monospace; letter-spacing:.15em; text-transform:uppercase; }.content { margin:0; font-size:16px; line-height:1.6; white-space:pre-line; }.answer-card .content { font-size:clamp(18px,2vw,22px); font-weight:600; line-height:1.45; }.latency-wrap { margin-top:16px; padding:20px 24px; border:1px solid var(--line); border-radius:16px; background:rgba(0,57,35,.48); }.latency-wrap .label { color:var(--lime); }.metrics { display:flex; flex-wrap:wrap; gap:8px; }.metric-item { padding:8px 10px; border:1px solid rgba(255,255,255,.18); border-radius:7px; color:var(--cream); background:rgba(255,255,255,.07); font:11px/1 "DM Mono",monospace; }.metric-item.total { color:var(--green-950); border-color:var(--sun); background:var(--sun); font-weight:500; }
+        .footer { display:flex; justify-content:space-between; max-width:1180px; margin:0 auto; padding:16px 0 21px; border-top:1px solid var(--line); color:var(--lime); font:500 9px/1 "DM Mono",monospace; letter-spacing:.13em; text-transform:uppercase; } @media(max-width:620px) { .page { padding-right:16px; padding-left:16px; }.hero { min-height:410px; }.sunset { transform:translateX(-50%) scale(.8); transform-origin:bottom center; }.results-grid { grid-template-columns:1fr; }.footer { font-size:8px; letter-spacing:.08em; } } @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
     </style>
 </head>
 <body>
-
-    <h1>🎙️ Multilingual Voice RAG</h1>
-    
-    <div class="controls">
-        <button id="recordBtn">Hold to Speak</button>
-    </div>
-
-    <div id="loading">Processing audio, retrieving context, and generating answer...</div>
-
-    <div id="results" style="display: none;">
-        <div class="card">
-            <div class="label">Transcription (Translated to English)</div>
-            <p class="content" id="transcriptionText"></p>
-        </div>
-        
-        <div class="card" style="border-left: 5px solid #2ecc71;">
-            <div class="label">Answer</div>
-            <p class="content" id="answerText"></p>
-        </div>
-        
-        <div class="label">Latency Breakdown</div>
-        <div class="metrics" id="latencyMetrics"></div>
-    </div>
-
+    <main class="page">
+        <div class="grain"></div>
+        <header class="topbar"><span class="live">Voice studio</span><span>HH Goa · 2026</span></header>
+        <section class="hero" aria-labelledby="pageTitle">
+            <p class="eyebrow">Multilingual retrieval studio</p>
+            <h1 id="pageTitle">Hacker <span>House</span><b class="goa">Goa</b></h1>
+            <div class="sunset" aria-hidden="true"><div class="sun"></div><div class="horizon"></div><div class="wave"></div><div class="wave w2"></div></div>
+        </section>
+        <section class="studio" aria-labelledby="askTitle">
+            <p class="section-kicker">Your beachside knowledge guide</p><h2 id="askTitle">What would you like to <em>know?</em></h2>
+            <div class="record-shell"><button id="recordBtn" type="button" aria-label="Hold to record your question">Hold to<br>speak</button></div>
+            <p class="record-hint">PRESS &amp; HOLD TO RECORD · RELEASE TO ASK</p>
+            <div id="loading" role="status">Listening to the waves, finding your answer…</div>
+        </section>
+        <section id="results" aria-live="polite">
+            <div class="results-grid"><article class="card"><p class="label">What we heard</p><p class="content" id="transcriptionText"></p></article><article class="card answer-card" id="answerCard"><p class="label">Your answer</p><p class="content" id="answerText"></p></article></div>
+            <div class="latency-wrap"><p class="label">Journey time</p><div class="metrics" id="latencyMetrics"></div></div>
+        </section>
+        <footer class="footer"><span>Goa, India</span><span>Ask · Retrieve · Answer</span><span>Voice RAG</span></footer>
+    </main>
     <script>
-        let mediaRecorder;
-        let audioChunks = [];
-        const recordBtn = document.getElementById('recordBtn');
-        const loadingEl = document.getElementById('loading');
-        const resultsEl = document.getElementById('results');
-        const transcriptionText = document.getElementById('transcriptionText');
-        const answerText = document.getElementById('answerText');
-        const latencyMetrics = document.getElementById('latencyMetrics');
-
-        // Request microphone access
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                mediaRecorder = new MediaRecorder(stream);
-                
-                mediaRecorder.addEventListener("dataavailable", event => {
-                    audioChunks.push(event.data);
-                });
-                
-                mediaRecorder.addEventListener("stop", () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    audioChunks = [];
-                    sendAudioToServer(audioBlob);
-                });
-            })
-            .catch(err => {
-                console.error("Microphone access denied: ", err);
-                alert("Microphone access is required to use this app.");
-            });
-
-        // Hold to record logic
-        recordBtn.addEventListener('mousedown', startRecording);
-        recordBtn.addEventListener('touchstart', startRecording);
-        
-        recordBtn.addEventListener('mouseup', stopRecording);
-        recordBtn.addEventListener('touchend', stopRecording);
-        
-        function startRecording(e) {
-            e.preventDefault();
-            if (mediaRecorder && mediaRecorder.state === "inactive") {
-                mediaRecorder.start();
-                recordBtn.classList.add('recording');
-                recordBtn.textContent = "Recording... Release to send";
-                resultsEl.style.display = 'none';
-            }
-        }
-        
-        function stopRecording(e) {
-            e.preventDefault();
-            if (mediaRecorder && mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-                recordBtn.classList.remove('recording');
-                recordBtn.textContent = "Hold to Speak";
-            }
-        }
-
-        async function sendAudioToServer(audioBlob) {
-            loadingEl.style.display = 'block';
-            
-            const formData = new FormData();
-            formData.append("audio", audioBlob, "recording.webm");
-            
-            try {
-                const response = await fetch('/ask', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                // Display Results
-                transcriptionText.textContent = data.transcribed_text || "[Empty/Unintelligible]";
-                answerText.textContent = data.answer;
-                
-                // Color code rejection
-                const answerCard = answerText.parentElement;
-                if (data.rejected) {
-                    answerCard.style.borderLeft = "5px solid #e74c3c";
-                    answerText.textContent = `❌ ${data.rejection_reason}\n\n${data.answer}`;
-                } else {
-                    answerCard.style.borderLeft = "5px solid #2ecc71";
-                    if (data.sources && data.sources.length > 0) {
-                        answerText.textContent += ` (Sources: ${data.sources.join(', ')})`;
-                    }
-                }
-                
-                // Render latencies
-                latencyMetrics.innerHTML = '';
-                const l = data.latency;
-                const metrics = {
-                    "STT": l.stt_ms,
-                    "Input Guard": l.input_guard_ms,
-                    "Embedding": l.embedding_ms,
-                    "Retrieval": l.retrieval_ms,
-                    "Reranking": l.reranking_ms,
-                    "Generation": l.generation_ms,
-                    "Total RAG": l.rag_total_ms,
-                    "Total E2E": l.e2e_total_ms
-                };
-                
-                for (const [key, val] of Object.entries(metrics)) {
-                    if (val !== undefined && val !== null && val > 0) {
-                        const div = document.createElement('div');
-                        div.className = 'metric-item';
-                        div.textContent = `${key}: ${val.toFixed(1)}ms`;
-                        latencyMetrics.appendChild(div);
-                    }
-                }
-                
-                resultsEl.style.display = 'block';
-            } catch (err) {
-                console.error(err);
-                alert("Failed to reach server.");
-            } finally {
-                loadingEl.style.display = 'none';
-            }
-        }
+        let mediaRecorder, audioChunks = [];
+        const recordBtn = document.getElementById('recordBtn'), loadingEl = document.getElementById('loading'), resultsEl = document.getElementById('results'), transcriptionText = document.getElementById('transcriptionText'), answerText = document.getElementById('answerText'), answerCard = document.getElementById('answerCard'), latencyMetrics = document.getElementById('latencyMetrics');
+        navigator.mediaDevices.getUserMedia({ audio:true }).then(stream => { mediaRecorder = new MediaRecorder(stream); mediaRecorder.addEventListener('dataavailable', event => audioChunks.push(event.data)); mediaRecorder.addEventListener('stop', () => { const audioBlob = new Blob(audioChunks,{type:'audio/webm'}); audioChunks=[]; sendAudioToServer(audioBlob); }); }).catch(err => { console.error('Microphone access denied:',err); recordBtn.disabled=true; recordBtn.textContent='Microphone needed'; alert('Microphone access is required to use this app.'); });
+        recordBtn.addEventListener('pointerdown',startRecording); recordBtn.addEventListener('pointerup',stopRecording); recordBtn.addEventListener('pointercancel',stopRecording); recordBtn.addEventListener('pointerleave',event => { if(event.buttons) stopRecording(event); });
+        function startRecording(event) { event.preventDefault(); if(mediaRecorder && mediaRecorder.state === 'inactive') { recordBtn.setPointerCapture?.(event.pointerId); mediaRecorder.start(); recordBtn.classList.add('recording'); recordBtn.innerHTML='Recording…<br>release to ask'; } }
+        function stopRecording(event) { event.preventDefault(); if(mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); recordBtn.classList.remove('recording'); recordBtn.innerHTML='Hold to<br>speak'; } }
+        async function sendAudioToServer(audioBlob) { loadingEl.style.display='block'; const formData=new FormData(); formData.append('audio',audioBlob,'recording.webm'); try { const response=await fetch('/ask',{method:'POST',body:formData}); if(!response.ok) throw new Error(`Server returned ${response.status}`); const data=await response.json(); transcriptionText.textContent=data.transcribed_text || '[Empty / unintelligible]'; answerText.textContent=data.answer || 'No answer returned.'; answerCard.classList.toggle('rejected',Boolean(data.rejected)); if(data.rejected) answerText.textContent=`✦ ${data.rejection_reason || 'Request rejected'}\n\n${data.answer || ''}`; else if(data.sources?.length) answerText.textContent += `\n\nSource: ${data.sources.join(', ')}`; latencyMetrics.innerHTML=''; const l=data.latency || {}; const metrics={STT:l.stt_ms,Embedding:l.embedding_ms,Retrieval:l.retrieval_ms,Reranking:l.reranking_ms,'Total RAG':l.rag_total_ms,'Total E2E':l.e2e_total_ms}; for(const [key,value] of Object.entries(metrics)) { if(value !== undefined && value !== null && value > 0) { const item=document.createElement('span'); item.className=`metric-item${key.startsWith('Total') ? ' total' : ''}`; item.textContent=`${key}: ${value.toFixed(1)} ms`; latencyMetrics.appendChild(item); } } resultsEl.style.display='block'; resultsEl.scrollIntoView({behavior:'smooth',block:'nearest'}); } catch(err) { console.error(err); alert('Could not reach the answer service. Please try again.'); } finally { loadingEl.style.display='none'; } }
     </script>
 </body>
 </html>

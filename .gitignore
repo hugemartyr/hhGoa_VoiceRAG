@@ -8,6 +8,41 @@ results/
 dist/
 build/
 .venv/
+.venv311/
 venv/
 qdrant_storage/
 .serena
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Python testing / tooling
+.pytest_cache/
+.mypy_cache/
+__pypackages__/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Vercel / build outputs
+.vercel/
+.vercel_build_output/
+
+# Local model / hub caches
+model_cache/
+
+# Other virtualenv variants
+.venv*/
+
+# Caches and logs
+.cache/
+*.log
+
+# packaging
+pip-wheel-metadata/
+
+# local python version file
+.python-version

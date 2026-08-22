@@ -46,3 +46,4 @@ pip-wheel-metadata/
 
 # local python version file
 .python-version
+.vercel

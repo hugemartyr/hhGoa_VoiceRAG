@@ -2,26 +2,26 @@
 
 A blazing-fast, multilingual, voice-enabled Retrieval-Augmented Generation (RAG) system built for the HH Goa 2026 hackathon.
 
-This system takes a user's spoken question in multiple languages, transcribes and translates it to English via Sarvam AI, retrieves exact answers from a massive dataset (MSMARCO-XI) stored in Qdrant, and generates a grounded answer via Groq (Llama 3.1).
+This system takes a user's spoken question in multiple languages, transcribes and translates it to English via Sarvam AI, embeds the English query, retrieves the closest pre-indexed answer from Qdrant, and returns that stored answer directly. The default production path does not call a chat/generation LLM.
 
 ## 🚀 Key Features
 
 * **Voice-First Input**: Speak in multiple languages (Hindi, etc.), processed seamlessly through Sarvam Saaras v3.
 * **Intelligent Hierarchical Chunking**: Documents are split into semantic sentences that dynamically map back to full parent passages upon retrieval—eliminating the "small-to-big" retrieval context loss.
-* **Hybrid Search (Dense + Sparse)**: Combines standard `all-MiniLM-L6-v2` dense embeddings with a custom offline BM25 vocabulary encoder for exact keyword matches. Fused using Reciprocal Rank Fusion (RRF).
+* **Embedding Search**: Uses `all-MiniLM-L6-v2` dense embeddings through FastEmbed in production, then searches Qdrant for the closest stored query/answer pair.
 * **Two-Tier Safety & Anti-Hallucination**:
-  1. *Early Rejection*: A calibrated `ms-marco-MiniLM-L-6-v2` cross-encoder accurately scores retrieved contexts. Unanswerable queries fail the `Confidence Gate` and abort before wasting expensive LLM calls.
-  2. *Groundedness Validation*: The LLM is forced to output a structured JSON array of citation IDs and a `grounded` flag. If the LLM generates ungrounded answers or hallucinates citations, it is programmatically rejected without a secondary LLM call.
+  1. *Early Rejection*: The confidence gate rejects weak retrieval matches.
+  2. *Stored Answers*: Query-level retrieval returns pre-written answers, avoiding generated hallucinations in the default flow.
 * **Sub-2 Second E2E Latency**: Highly optimized async pipeline.
 
 ## 🛠️ Architecture
 1. **Input Guard**: `app/guardrails/input_guard.py` (Fast heuristic safety checks)
 2. **STT**: `app/pipeline/stt.py` (Sarvam Saaras v3 API)
-3. **Embedder**: `app/pipeline/embedder.py` (Sentence-Transformers + BM25)
-4. **Retriever**: `app/pipeline/retriever.py` (Qdrant + RRF + Parent Expansion)
-5. **Reranker**: `app/pipeline/reranker.py` (Cross-encoder Logit scoring)
+3. **Embedder**: `app/pipeline/embedder.py` (FastEmbed by default; Sentence-Transformers optional locally)
+4. **Retriever**: `app/pipeline/query_retriever.py` (Qdrant query-level retrieval)
+5. **Reranker**: `app/pipeline/reranker.py` (optional cross-encoder scoring; disabled by default for Vercel)
 6. **Output Guard**: `app/guardrails/output_guard.py` (Confidence Gate & Grounding Validation)
-7. **Generator**: `app/pipeline/generator.py` (Groq API structured JSON mode)
+7. **Answer Lookup**: returns the stored `Eng_Answer` from Qdrant in the default flow
 
 ## 📊 Latency Benchmarks
 Our highly optimized architecture achieves the following average latency percentiles (based on 30 end-to-end benchmark runs):
@@ -67,6 +67,11 @@ docker-compose up -d
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+For local ingestion, reranking, benchmarking, or the optional passage-mode LLM path, also install:
+```bash
+pip install -r requirements-models.txt
 ```
 
 ### 4. Ingestion

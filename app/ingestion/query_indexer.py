@@ -18,9 +18,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
-from sentence_transformers import SentenceTransformer
 
 from app.config import settings
+from app.pipeline.embedder import QueryEmbedder
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class QueryIndexer:
         )
         self.client = QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key or None, timeout=30.0)
         self.collection_name = settings.qdrant_query_collection
-        self.embedder: Optional[SentenceTransformer] = None
+        self.embedder: Optional[QueryEmbedder] = None
 
     def _setup_collection(self):
         """Create the query collection if it does not exist."""
@@ -115,8 +115,11 @@ class QueryIndexer:
         self._setup_collection()
 
         if self.embedder is None:
-            logger.info(f"Loading embedding model: {settings.embedding_model}...")
-            self.embedder = SentenceTransformer(settings.embedding_model)
+            logger.info(
+                f"Loading embedding model: {settings.embedding_model} "
+                f"(backend={settings.embedding_backend})..."
+            )
+            self.embedder = QueryEmbedder()
 
         start_row = 0
         checkpoint_path = os.path.join(settings.data_dir, "query_index_checkpoint.json")
@@ -149,11 +152,7 @@ class QueryIndexer:
                     continue
 
                 query_id, eng_query, eng_answer, answer, query_type = extracted
-                dense_vector = self.embedder.encode(
-                    eng_query,
-                    convert_to_numpy=True,
-                    show_progress_bar=False,
-                ).tolist()
+                dense_vector, _, _ = self.embedder.embed_query(eng_query)
 
                 points_batch.append(
                     qmodels.PointStruct(

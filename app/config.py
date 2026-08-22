@@ -32,7 +32,11 @@ class Settings(BaseSettings):
     # --- Model Names ---
     embedding_model: str = Field(
         default="sentence-transformers/all-MiniLM-L6-v2",
-        description="Sentence-transformers model for dense embeddings (384-dim)",
+        description="Dense embedding model name (384-dim)",
+    )
+    embedding_backend: str = Field(
+        default="fastembed",
+        description="Embedding backend: 'fastembed' for small Vercel runtime, or 'sentence-transformers' for local ML installs",
     )
     reranker_model: str = Field(
         default="cross-encoder/ms-marco-MiniLM-L-6-v2",
@@ -50,7 +54,7 @@ class Settings(BaseSettings):
     final_top_k: int = Field(default=5, description="Number of context passages sent to LLM")
 
     # --- Feature Flags ---
-    enable_reranker: bool = Field(default=True, description="Enable cross-encoder reranking")
+    enable_reranker: bool = Field(default=False, description="Enable cross-encoder reranking")
     enable_sparse_retrieval: bool = Field(default=True, description="Enable BM25 sparse retrieval")
 
     # --- Chunking Parameters ---

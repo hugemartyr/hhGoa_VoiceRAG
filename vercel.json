@@ -3,7 +3,7 @@
   "functions": {
     "app/main.py": {
       "maxDuration": 10,
-      "excludeFiles": "{scripts/**,data/**,results/**,qdrant_storage/**,**/__pycache__/**,**/*.pyc,ARCHITECTURE.md}"
+      "excludeFiles": "{scripts/**,data/**,results/**,qdrant_storage/**,model_cache/**,.venv/**,.venv*/**,app/ingestion/chunker.py,app/ingestion/indexer.py,app/ingestion/query_indexer.py,app/pipeline/generator.py,app/pipeline/retriever.py,requirements-models.txt,uv.lock,Dockerfile,docker-compose.yml,ARCHITECTURE.md,**/__pycache__/**,**/*.pyc}"
     }
   }
 }

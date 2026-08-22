@@ -8,7 +8,6 @@ import time
 import logging
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 from app.pipeline.stt import SarvamSTT
 from app.pipeline.orchestrator import PipelineOrchestrator

@@ -4,12 +4,13 @@ Uses `cross-encoder/ms-marco-MiniLM-L-6-v2` to score (query, context) pairs.
 """
 
 import time
+import logging
 from typing import List
-
-from sentence_transformers import CrossEncoder
 
 from app.config import settings
 from app.models import RerankResult, RetrievalCandidate, QueryRetrievalCandidate
+
+logger = logging.getLogger(__name__)
 
 
 class QueryReranker:
@@ -20,7 +21,16 @@ class QueryReranker:
         
     def _lazy_load(self):
         if self.model is None and settings.enable_reranker:
+            try:
+                from sentence_transformers import CrossEncoder
+            except ImportError as e:
+                logger.warning(
+                    "Reranker disabled because sentence-transformers is not installed: %s",
+                    e,
+                )
+                return False
             self.model = CrossEncoder(settings.reranker_model, max_length=512)
+        return self.model is not None
 
     def rerank(self, query: str, candidates: List[RetrievalCandidate]) -> RerankResult:
         """Rerank retrieval candidates using a cross-encoder model."""
@@ -34,7 +44,12 @@ class QueryReranker:
                 confidence_score=candidates[0].rrf_score if candidates else 0.0
             )
 
-        self._lazy_load()
+        if not self._lazy_load():
+            return RerankResult(
+                candidates=candidates[:settings.final_top_k],
+                latency_ms=(time.perf_counter() - start_time) * 1000,
+                confidence_score=candidates[0].rrf_score if candidates else 0.0,
+            )
         
         # Prepare pairs of (Query, Context)
         # We use `context_text` since that's what the LLM will see
@@ -80,7 +95,9 @@ class QueryReranker:
             best = candidates[0].dense_score
             return candidates[: settings.final_top_k], (time.perf_counter() - start_time) * 1000, best
 
-        self._lazy_load()
+        if not self._lazy_load():
+            best = candidates[0].dense_score
+            return candidates[: settings.final_top_k], (time.perf_counter() - start_time) * 1000, best
         pairs = [[query, c.eng_query] for c in candidates]
         scores = self.model.predict(pairs)
 

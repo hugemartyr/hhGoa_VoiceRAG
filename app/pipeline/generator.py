@@ -9,8 +9,6 @@ import logging
 import time
 from typing import List
 
-from groq import Groq
-
 from app.config import settings
 from app.models import GeneratedAnswer, RetrievalCandidate
 
@@ -21,6 +19,13 @@ class GroqGenerator:
     """Singleton-like class for interacting with the Groq API."""
     
     def __init__(self):
+        try:
+            from groq import Groq
+        except ImportError as e:
+            raise ImportError(
+                "The 'groq' package is required for passage retrieval mode. "
+                "Install it with: pip install groq"
+            ) from e
         self.client = Groq(api_key=settings.groq_api_key)
         self.model = settings.llm_model
         

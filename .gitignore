@@ -10,3 +10,4 @@ build/
 .venv/
 venv/
 qdrant_storage/
+.serena

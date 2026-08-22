@@ -18,7 +18,15 @@ class Settings(BaseSettings):
 
     # --- Qdrant ---
     qdrant_url: str = Field(default="http://localhost:6333", description="Qdrant server URL")
-    qdrant_collection: str = Field(default="msmarco_rag", description="Qdrant collection name")
+    qdrant_collection: str = Field(default="msmarco_rag", description="Qdrant collection for passage chunks")
+    qdrant_query_collection: str = Field(
+        default="msmarco_queries",
+        description="Qdrant collection for query-level retrieval (Eng_Query → Eng_Answer)",
+    )
+    retrieval_mode: str = Field(
+        default="query",
+        description="Retrieval strategy: 'query' (fast path, no LLM) or 'passage' (classic RAG with LLM)",
+    )
 
     # --- Model Names ---
     embedding_model: str = Field(
@@ -103,6 +111,7 @@ class Settings(BaseSettings):
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": False,
+        "extra": "ignore",
     }
 
 

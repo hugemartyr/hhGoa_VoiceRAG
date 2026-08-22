@@ -6,31 +6,52 @@ a small list of dictionaries that mimics the structure of MSMARCO-XI.
 
 from typing import List, Dict, Any
 
+
 def get_mock_dataset() -> List[Dict[str, Any]]:
     return [
         {
             "query_id": "1",
+            "Eng_Query": "What is photosynthesis?",
+            "Eng_Answer": (
+                "Photosynthesis is a process used by plants and other organisms "
+                "to convert light energy into chemical energy that fuels their activities."
+            ),
+            "Answer": "Photosynthesis is the process plants use to convert sunlight into energy.",
+            "query": "What is photosynthesis?",
             "English_passages": [
                 "Photosynthesis is a process used by plants and other organisms to convert light energy into chemical energy.",
                 "This chemical energy is later released to fuel the organisms' activities.",
-                "Cellular respiration is the process of converting glucose into usable energy in the form of ATP."
+                "Cellular respiration is the process of converting glucose into usable energy in the form of ATP.",
             ],
             "is_selected": [1, 0, 0],
-            "query_type": "description"
+            "query_type": "description",
         },
         {
             "query_id": "2",
+            "Eng_Query": "Where is the Eiffel Tower located?",
+            "Eng_Answer": (
+                "The Eiffel Tower is located on the Champ de Mars in Paris, France. "
+                "It is a wrought-iron lattice tower named after engineer Gustave Eiffel."
+            ),
+            "Answer": "The Eiffel Tower is in Paris, France.",
+            "query": "Where is the Eiffel Tower?",
             "English_passages": [
                 "The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris, France.",
-                "It is named after the engineer Gustave Eiffel, whose company designed and built the tower."
+                "It is named after the engineer Gustave Eiffel, whose company designed and built the tower.",
             ],
             "is_selected": [1, 1],
-            "query_type": "entity"
+            "query_type": "entity",
         },
         {
             "query_id": "3",
+            "Eng_Query": "What is the chemical formula for water?",
+            "Eng_Answer": (
+                "The chemical formula for water is H2O, meaning each molecule contains "
+                "one oxygen atom and two hydrogen atoms bonded together."
+            ),
+            "Answer": "Water's chemical formula is H2O.",
+            "query": "What is the chemical formula for water?",
             "English_passages": [
-                # Long passage to trigger chunker splitting
                 " ".join([
                     "Water (chemical formula H2O) is an inorganic, transparent, tasteless, odorless, and nearly colorless chemical substance.",
                     "It is the main constituent of Earth's hydrosphere and the fluids of all known living organisms.",
@@ -48,10 +69,10 @@ def get_mock_dataset() -> List[Dict[str, Any]]:
                     "Fishing in salt and fresh water bodies is a major source of food for many parts of the world.",
                     "Much of the long-distance trade of commodities is transported by boats through seas, rivers, lakes, and canals.",
                     "Large quantities of water, ice, and steam are used for cooling and heating, in industry and homes.",
-                    "Water is an excellent solvent for a wide variety of substances both mineral and organic; as such it is widely used in industrial processes, and in cooking and washing."
+                    "Water is an excellent solvent for a wide variety of substances both mineral and organic; as such it is widely used in industrial processes, and in cooking and washing.",
                 ])
             ],
             "is_selected": [1],
-            "query_type": "description"
-        }
+            "query_type": "description",
+        },
     ]

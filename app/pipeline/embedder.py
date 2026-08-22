@@ -19,7 +19,9 @@ class QueryEmbedder:
 
     def __init__(self):
         self.dense_model = SentenceTransformer(settings.embedding_model)
-        self.sparse_encoder = BM25SparseEncoder.load(settings.data_dir)
+        self.sparse_encoder = None
+        if settings.retrieval_mode == "passage" and settings.enable_sparse_retrieval:
+            self.sparse_encoder = BM25SparseEncoder.load(settings.data_dir)
 
     def embed_query(self, query: str) -> Tuple[list[float], SparseVectorData, float]:
         """Encode a query into dense and sparse representations.
@@ -29,11 +31,12 @@ class QueryEmbedder:
         """
         start_time = time.perf_counter()
         
-        # Dense encoding
         dense_vector = self.dense_model.encode(query, convert_to_numpy=True).tolist()
         
-        # Sparse encoding
-        sparse_vector = self.sparse_encoder.encode_query(query)
+        if self.sparse_encoder is not None:
+            sparse_vector = self.sparse_encoder.encode_query(query)
+        else:
+            sparse_vector = SparseVectorData(indices=[], values=[])
         
         latency = (time.perf_counter() - start_time) * 1000
         return dense_vector, sparse_vector, latency

@@ -30,6 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from datasets import load_dataset
 from app.config import settings
 from app.ingestion.indexer import QdrantIndexer, _get_memory_usage_mb
+from app.ingestion.query_indexer import QueryIndexer
 
 # Configure root logger with detailed formatting
 logging.basicConfig(
@@ -131,7 +132,13 @@ def main():
     parser.add_argument("--log-interval", type=int, default=100, help="Log progress every N rows (default: 100)")
     parser.add_argument("--resume", action="store_true", help="Resume from last checkpoint (Pass 2 only)")
     parser.add_argument("--skip-pass1", action="store_true", help="Skip BM25 vocabulary building (assumes already built)")
-    parser.add_argument("--skip-pass2", action="store_true", help="Skip Qdrant indexing")
+    parser.add_argument("--skip-pass2", action="store_true", help="Skip Qdrant passage indexing")
+    parser.add_argument("--skip-query-index", action="store_true", help="Skip query-level indexing (Eng_Query → Eng_Answer)")
+    parser.add_argument(
+        "--queries-only",
+        action="store_true",
+        help="Only run query-level indexing (skips Pass 1 BM25 and Pass 2 passages)",
+    )
     parser.add_argument("--mock", action="store_true", help="Use small mock dataset instead of huggingface streaming")
 
     args = parser.parse_args()
@@ -147,6 +154,7 @@ def main():
     logger.info(f"Qdrant Batch Size:      {settings.batch_size}")
     logger.info(f"Qdrant Target URL:      {settings.qdrant_url}")
     logger.info(f"Qdrant Collection:      {settings.qdrant_collection}")
+    logger.info(f"Query Collection:       {settings.qdrant_query_collection}")
     logger.info(f"Embedding Model:        {settings.embedding_model}")
     logger.info(f"Data Directory:         {settings.data_dir}")
     logger.info(f"Dataset Split:          {args.split} (language: {args.lang})")
@@ -171,8 +179,12 @@ def main():
 
     pipeline_start_time = time.time()
 
+    run_pass1 = not args.skip_pass1 and not args.queries_only
+    run_pass2 = not args.skip_pass2 and not args.queries_only
+    run_query_index = not args.skip_query_index
+
     # --- PASS 1: BM25 Vocabulary Building ---
-    if not args.skip_pass1:
+    if run_pass1:
         logger.info(">>> Starting Pass 1: BM25 Vocabulary Building")
         try:
             pass1_dataset = get_dataset()
@@ -183,9 +195,9 @@ def main():
     else:
         logger.info("Skipping Pass 1 (BM25 Vocabulary Building requested to be skipped).")
 
-    # --- PASS 2: Vector Indexing to Qdrant ---
-    if not args.skip_pass2:
-        logger.info(">>> Starting Pass 2: Qdrant Indexing")
+    # --- PASS 2: Passage Vector Indexing to Qdrant ---
+    if run_pass2:
+        logger.info(">>> Starting Pass 2: Passage Indexing to Qdrant")
         try:
             pass2_dataset = get_dataset()
             indexer.run_pass_2(pass2_dataset, max_rows=max_rows, resume=args.resume, log_interval=args.log_interval)
@@ -193,7 +205,25 @@ def main():
             logger.critical(f"FATAL ERROR in Pass 2: {e}", exc_info=True)
             sys.exit(1)
     else:
-        logger.info("Skipping Pass 2 (Qdrant Indexing requested to be skipped).")
+        logger.info("Skipping Pass 2 (Passage indexing skipped).")
+
+    # --- PASS 3: Query-Level Indexing (Eng_Query → Eng_Answer) ---
+    if run_query_index:
+        logger.info(">>> Starting Pass 3: Query-Level Indexing")
+        try:
+            query_indexer = QueryIndexer()
+            query_dataset = get_dataset()
+            query_indexer.run(
+                query_dataset,
+                max_rows=max_rows,
+                resume=args.resume,
+                log_interval=args.log_interval,
+            )
+        except Exception as e:
+            logger.critical(f"FATAL ERROR in Pass 3 (Query Indexing): {e}", exc_info=True)
+            sys.exit(1)
+    else:
+        logger.info("Skipping Pass 3 (Query-level indexing skipped).")
 
     total_pipeline_time = time.time() - pipeline_start_time
     logger.info("================================================================")

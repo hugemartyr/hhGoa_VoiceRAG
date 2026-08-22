@@ -19,7 +19,12 @@ class OutputGuard:
             (is_confident, rejection_reason)
         """
         if not settings.enable_reranker:
-            # If we don't have a reranker, we can't reliably threshold on RRF scores
+            threshold = settings.confidence_threshold_no_reranker
+            if best_score < threshold:
+                return False, (
+                    f"Retrieval confidence ({best_score:.2f}) below threshold "
+                    f"({threshold:.2f}) with reranker disabled."
+                )
             return True, ""
             
         if best_score < settings.confidence_threshold:

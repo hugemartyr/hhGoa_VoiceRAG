@@ -98,6 +98,25 @@ class RetrievalResult(BaseModel):
     latency_ms: float = Field(default=0.0, description="Total retrieval latency in milliseconds")
 
 
+class QueryRetrievalCandidate(BaseModel):
+    """A candidate from query-level retrieval (Eng_Query → Eng_Answer lookup)."""
+
+    query_id: int = Field(description="MSMARCO query ID")
+    eng_query: str = Field(description="Indexed English query text")
+    eng_answer: str = Field(description="Pre-written English answer for this query")
+    answer: str = Field(default="", description="Translated answer (Indic) when available")
+    dense_score: float = Field(default=0.0, description="Dense vector similarity score")
+    rerank_score: Optional[float] = Field(default=None, description="Cross-encoder score vs user query")
+    query_type: str = Field(default="", description="MSMARCO query type")
+
+
+class QueryRetrievalResult(BaseModel):
+    """Result from query-level dense retrieval."""
+
+    candidates: List[QueryRetrievalCandidate] = Field(default_factory=list)
+    latency_ms: float = Field(default=0.0, description="Total retrieval latency in milliseconds")
+
+
 # =============================================================================
 # Reranker Models
 # =============================================================================

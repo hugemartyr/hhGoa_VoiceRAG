@@ -4,6 +4,7 @@ Generates dense embeddings (SentenceTransformers) and sparse embeddings (BM25).
 Loads models once into memory.
 """
 
+import os
 import time
 from typing import Tuple
 
@@ -18,6 +19,12 @@ class QueryEmbedder:
     """Singleton-like class for generating query embeddings."""
 
     def __init__(self):
+        # Respect HF_HOME if set (used to point to a bundled model cache on Vercel)
+        hf_home = os.environ.get("HF_HOME")
+        if hf_home:
+            os.environ.setdefault("TRANSFORMERS_CACHE", hf_home)
+            os.environ.setdefault("HF_HOME", hf_home)
+
         self.dense_model = SentenceTransformer(settings.embedding_model)
         self.sparse_encoder = None
         if settings.retrieval_mode == "passage" and settings.enable_sparse_retrieval:

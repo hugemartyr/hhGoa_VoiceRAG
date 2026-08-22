@@ -127,7 +127,7 @@ def _extract_row_data(row: Dict[str, Any], row_idx: int) -> Tuple[int, List[str]
 class QdrantIndexer:
     def __init__(self):
         logger.info(f"Connecting to Qdrant at {settings.qdrant_url} (collection: {settings.qdrant_collection})")
-        self.client = QdrantClient(url=settings.qdrant_url, timeout=30.0)
+        self.client = QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key or None, timeout=30.0)
         self.collection_name = settings.qdrant_collection
         self.embedder = None
         self.sparse_encoder = None

@@ -17,7 +17,7 @@ class QueryRetriever:
     """Dense retrieval over indexed MSMARCO-XI queries."""
 
     def __init__(self):
-        self.client = QdrantClient(url=settings.qdrant_url, timeout=settings.retrieval_timeout_s)
+        self.client = QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key or None, timeout=settings.retrieval_timeout_s)
         self.collection_name = settings.qdrant_query_collection
 
     def search(self, dense_vector: List[float], limit: int = 20) -> QueryRetrievalResult:

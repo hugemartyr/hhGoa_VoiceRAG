@@ -19,7 +19,7 @@ from app.models import RetrievalCandidate, RetrievalResult, SparseVectorData
 
 class HybridRetriever:
     def __init__(self):
-        self.client = QdrantClient(url=settings.qdrant_url, timeout=settings.retrieval_timeout_s)
+        self.client = QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key or None, timeout=settings.retrieval_timeout_s)
         self.collection_name = settings.qdrant_collection
 
     def _rrf_fusion(self, dense_results, sparse_results, k: int = 60) -> List[Dict]:

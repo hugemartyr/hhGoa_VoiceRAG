@@ -18,9 +18,23 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="HH Goa 2026 Voice RAG")
 
-# Singletons
-stt_client = SarvamSTT()
-orchestrator = PipelineOrchestrator()
+# Lazy singletons to avoid heavy import/cold-start costs on module import
+_stt_client = None
+_orchestrator = None
+
+
+def get_stt_client():
+    global _stt_client
+    if _stt_client is None:
+        _stt_client = SarvamSTT()
+    return _stt_client
+
+
+def get_orchestrator():
+    global _orchestrator
+    if _orchestrator is None:
+        _orchestrator = PipelineOrchestrator()
+    return _orchestrator
 
 
 @app.post("/ask")
@@ -32,7 +46,8 @@ async def ask_question(audio: UploadFile = File(...)):
     audio_bytes = await audio.read()
     
     # 2. STT (Voice to English Text)
-    stt_res = await stt_client.transcribe_and_translate(audio_bytes, filename=audio.filename)
+    stt = get_stt_client()
+    stt_res = await stt.transcribe_and_translate(audio_bytes, filename=audio.filename)
     
     # Fallback if STT fails completely
     if not stt_res.text:
@@ -43,7 +58,7 @@ async def ask_question(audio: UploadFile = File(...)):
         })
         
     # 3. RAG Pipeline
-    pipeline_res = orchestrator.process_query(stt_res.text, stt_latency=stt_res.latency_ms)
+    pipeline_res = get_orchestrator().process_query(stt_res.text, stt_latency=stt_res.latency_ms)
     
     # Force E2E latency to include the time taken for audio reading, etc.
     pipeline_res.latency.e2e_total_ms = (time.perf_counter() - start_time) * 1000
@@ -62,3 +77,10 @@ async def serve_ui():
             return f.read()
     except FileNotFoundError:
         return "<h1>Frontend not found. Please create app/static/index.html</h1>"
+
+
+
+@app.get("/health")
+async def health():
+    """Lightweight health check that does not initialize heavy ML models."""
+    return JSONResponse({"status": "ok"})

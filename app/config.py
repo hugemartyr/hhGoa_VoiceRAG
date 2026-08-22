@@ -23,6 +23,7 @@ class Settings(BaseSettings):
         default="msmarco_queries",
         description="Qdrant collection for query-level retrieval (Eng_Query → Eng_Answer)",
     )
+    qdrant_api_key: str = Field(default="", description="Qdrant Cloud API key (if using Qdrant Cloud)")
     retrieval_mode: str = Field(
         default="query",
         description="Retrieval strategy: 'query' (fast path, no LLM) or 'passage' (classic RAG with LLM)",

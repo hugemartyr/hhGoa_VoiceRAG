@@ -64,7 +64,7 @@ class QueryIndexer:
             f"Connecting to Qdrant at {settings.qdrant_url} "
             f"(query collection: {settings.qdrant_query_collection})"
         )
-        self.client = QdrantClient(url=settings.qdrant_url, timeout=30.0)
+        self.client = QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key or None, timeout=30.0)
         self.collection_name = settings.qdrant_query_collection
         self.embedder: Optional[SentenceTransformer] = None
 

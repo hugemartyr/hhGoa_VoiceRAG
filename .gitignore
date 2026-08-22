@@ -8,6 +8,45 @@ results/
 dist/
 build/
 .venv/
+.venv311/
 venv/
+.venv*/
 qdrant_storage/
-.serena
+.serena/
+
+# macOS
+.DS_Store
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Vercel / build outputs
+.vercel/
+.vercel_build_output/
+
+# Model caches
+model_cache/
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+__pypackages__/
+pip-wheel-metadata/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Caches and logs
+.cache/
+*.log
+
+# Local python version file
+.python-version
+
+# Docker
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# Misc
+*.sqlite3

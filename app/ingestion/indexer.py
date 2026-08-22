@@ -18,9 +18,15 @@ Pass 2: Indexing
 import json
 import logging
 import os
-import resource
 import time
 from typing import Any, Dict, List, Optional, Tuple
+
+# ``resource`` is Unix-only. It is used here solely for progress logging, so
+# importing it must not prevent the ingestion pipeline from running on Windows.
+try:
+    import resource
+except ImportError:  # Windows
+    resource = None
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
@@ -37,13 +43,44 @@ logger = logging.getLogger(__name__)
 def _get_memory_usage_mb() -> float:
     """Return the peak resident set size (RSS) in megabytes for the current process."""
     try:
-        # ru_maxrss is in KB on Linux, bytes on macOS
-        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        if os.uname().sysname == "Darwin":
-            return usage / (1024 * 1024)
-        return usage / 1024.0
+        if resource is not None:
+            # ru_maxrss is in KB on Linux, bytes on macOS.
+            usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            if os.uname().sysname == "Darwin":
+                return usage / (1024 * 1024)
+            return usage / 1024.0
+
+        if os.name == "nt":
+            import ctypes
+            from ctypes import wintypes
+
+            class PROCESS_MEMORY_COUNTERS_EX(ctypes.Structure):
+                _fields_ = [
+                    ("cb", wintypes.DWORD),
+                    ("PageFaultCount", wintypes.DWORD),
+                    ("PeakWorkingSetSize", ctypes.c_size_t),
+                    ("WorkingSetSize", ctypes.c_size_t),
+                    ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                    ("PagefileUsage", ctypes.c_size_t),
+                    ("PeakPagefileUsage", ctypes.c_size_t),
+                    ("PrivateUsage", ctypes.c_size_t),
+                ]
+
+            counters = PROCESS_MEMORY_COUNTERS_EX()
+            counters.cb = ctypes.sizeof(counters)
+            success = ctypes.WinDLL("Psapi.dll").GetProcessMemoryInfo(
+                ctypes.windll.kernel32.GetCurrentProcess(),
+                ctypes.byref(counters),
+                counters.cb,
+            )
+            if success:
+                return counters.PeakWorkingSetSize / (1024 * 1024)
     except Exception:
-        return 0.0
+        pass
+    return 0.0
 
 
 def _extract_row_data(row: Dict[str, Any], row_idx: int) -> Tuple[int, List[str], List[int], str]:
